@@ -4,7 +4,11 @@ from drf_spectacular.views import (
     SpectacularAPIView,
     SpectacularSwaggerView,
 )
+from rest_framework.routers import DefaultRouter
+from server.views import ServerListViewSet
 
+router = DefaultRouter()
+router.register("api/server/select", ServerListViewSet)
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -14,4 +18,4 @@ urlpatterns = [
         SpectacularSwaggerView.as_view(),
         name="swagger-ui",
     ),
-]
+] + router.urls
