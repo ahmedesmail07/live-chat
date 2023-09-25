@@ -1,4 +1,4 @@
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import ValidationError, AuthenticationFailed
 from rest_framework import viewsets
 from .models import Server
 from .serializers import ServerSerializer
@@ -29,6 +29,11 @@ class ServerListViewSet(viewsets.ViewSet):
         quantity = request.query_params.get("quantity")
         by_user = request.query_params.get("by_user") == "true"
         by_server_id = request.query_params.get("by_server_id")
+
+        if by_user and not request.user.is_authenticated:
+            raise AuthenticationFailed(
+                detail="You should authenticate first to access the filter"
+            )
 
         if category:
             self.queryset = self.queryset.filter(
