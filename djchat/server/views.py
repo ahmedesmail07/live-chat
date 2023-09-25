@@ -1,3 +1,4 @@
+from rest_framework.exceptions import ValidationError
 from rest_framework import viewsets
 from .models import Server
 from .serializers import ServerSerializer
@@ -27,6 +28,7 @@ class ServerListViewSet(viewsets.ViewSet):
         category = request.query_params.get("category")
         quantity = request.query_params.get("quantity")
         by_user = request.query_params.get("by_user") == "true"
+        by_server_id = request.query_params.get("by_server_id")
 
         if category:
             self.queryset = self.queryset.filter(
@@ -40,6 +42,16 @@ class ServerListViewSet(viewsets.ViewSet):
 
         if quantity:
             self.queryset = self.queryset[: int(quantity)]
+
+        if by_server_id:
+            try:
+                self.queryset = self.queryset.filter(id=by_server_id)
+                if not self.queryset.exists():
+                    raise ValidationError(
+                        detail=f"server with id {by_server_id} not found"
+                    )
+            except ValueError:
+                raise ValidationError(detail="Server value error.")
 
         serializer = ServerSerializer(self.queryset, many=True)
         return Response(serializer.data)
