@@ -1,8 +1,17 @@
 from rest_framework import serializers
-from .models import Server
+from .models import Channel, Server
+
+
+class ChannelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Channel
+        fields = "__all__"
 
 
 class ServerSerializer(serializers.ModelSerializer):
+    # the related_name of the server inside the channel model.
+    channel_server = ChannelSerializer(many=True)
+
     class Meta:
         model = Server
         fields = "__all__"
