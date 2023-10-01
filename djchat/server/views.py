@@ -4,6 +4,7 @@ from .models import Server
 from .serializers import ServerSerializer
 from rest_framework.response import Response
 from django.db.models import Q
+from django.db.models import Count
 
 
 class ServerListViewSet(viewsets.ViewSet):
@@ -29,6 +30,7 @@ class ServerListViewSet(viewsets.ViewSet):
         quantity = request.query_params.get("quantity")
         by_user = request.query_params.get("by_user") == "true"
         by_server_id = request.query_params.get("by_server_id")
+        with_num_members = request.query_params.get("with_num_members") == "true"
 
         if by_user and not request.user.is_authenticated:
             raise AuthenticationFailed(
@@ -45,6 +47,9 @@ class ServerListViewSet(viewsets.ViewSet):
             user_id = request.user.id
             self.queryset = self.queryset.filter(member=user_id)
 
+        if with_num_members:
+            self.queryset = self.queryset.annotate(num_members=Count("member"))
+
         if quantity:
             self.queryset = self.queryset[: int(quantity)]
 
@@ -58,5 +63,7 @@ class ServerListViewSet(viewsets.ViewSet):
             except ValueError:
                 raise ValidationError(detail="Server value error.")
 
-        serializer = ServerSerializer(self.queryset, many=True)
+        serializer = ServerSerializer(
+            self.queryset, many=True, context={"num_members": with_num_members}
+        )
         return Response(serializer.data)
